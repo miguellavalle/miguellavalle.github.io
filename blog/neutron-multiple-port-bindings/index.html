@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#
+" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Implementing multiple bindings for OpenStack Networking ports | code bits and other stuff by Miguel Lavalle</title>
+<link href="../../assets/css/all-nocdn.css" rel="stylesheet" type="text/css">
+<link href="../../assets/css/ipython.min.css" rel="stylesheet" type="text/css">
+<link href="../../assets/css/nikola_ipython.css" rel="stylesheet" type="text/css">
+<meta name="theme-color" content="#5670d4">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="../../rss.xml">
+<link rel="canonical" href="https://www.miguellavalle.com/blog/neutron-multiple-port-bindings/">
+<link rel="icon" href="../../favicon-16x16.png" sizes="16x16">
+<link rel="icon" href="../../favicon-32x32.png" sizes="32x32">
+<!--[if lt IE 9]><script src="../../assets/js/html5.js"></script><![endif]--><meta name="author" content="Miguel Lavalle">
+<link rel="next" href="../on-being-pythonic/" title="On being pythonic" type="text/html">
+<meta property="og:site_name" content="code bits and other stuff by Miguel Lavalle">
+<meta property="og:title" content="Implementing multiple bindings for OpenStack Networking ports">
+<meta property="og:url" content="https://www.miguellavalle.com/blog/neutron-multiple-port-bindings/">
+<meta property="og:description" content="One would be hard pressed to point out a more fundamental function of OpenStack
+Networking (a.k.a. Neutron) than that of providing virtual ports and the
+process of binding them. It is through bound po">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2017-12-08T15:53:16-06:00">
+<meta property="article:tag" content="Neutron">
+<meta property="article:tag" content="OpenStack">
+</head>
+<body>
+<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+
+<!-- Menubar -->
+
+<nav class="navbar navbar-expand-md static-top mb-4
+navbar-light
+bg-info
+"><div class="container">
+<!-- This keeps the margins nice -->
+        <a class="navbar-brand" href="../../">
+
+            <span id="blog-title">code bits and other stuff by Miguel Lavalle</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="bs-navbar">
+            <ul class="navbar-nav mr-auto">
+<li class="nav-item">
+<a href="../../index.html" class="nav-link">Home</a>
+                </li>
+<li class="nav-item">
+<a href="../../archive.html" class="nav-link">Blog</a>
+                </li>
+<li class="nav-item">
+<a href="../../categories/" class="nav-link">Tags</a>
+                </li>
+<li class="nav-item">
+<a href="../../rss.xml" class="nav-link">RSS feed</a>
+
+                
+            </li>
+</ul>
+<ul class="navbar-nav navbar-right"></ul>
+</div>
+<!-- /.navbar-collapse -->
+    </div>
+<!-- /.container -->
+</nav><!-- End of Menubar --><div class="container" id="content" role="main">
+    <div class="body-content">
+        <!--Body content-->
+        
+        
+        
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name"><a href="." class="u-url">Implementing multiple bindings for OpenStack Networking ports</a></h1>
+
+        <div class="metadata">
+            <p class="byline author vcard p-author h-card"><span class="byline-name fn p-name" itemprop="author">
+                    Miguel Lavalle
+            </span></p>
+            <p class="dateline">
+            <a href="." rel="bookmark">
+            <time class="published dt-published" datetime="2017-12-08T15:53:16-06:00" itemprop="datePublished" title="2017-12-08">2017-12-08</time></a>
+            </p>
+                <p class="commentline">
+        
+    <a href="#disqus_thread" data-disqus-identifier="cache/posts/neutron-multiple-port-bindings.html">Comments</a>
+
+
+            
+
+        </p>
+</div>
+        
+
+    </header><div class="e-content entry-content" itemprop="articleBody text">
+    <div>
+<p>One would be hard pressed to point out a more fundamental function of OpenStack
+Networking (a.k.a. Neutron) than that of providing virtual ports and the
+process of binding them. It is through bound ports that virtual machines
+(instances) and higher level services like load balancers can access the
+virtual networking provided by Neutron. In this blog post I want to provide an
+overview of that process we call port binding and then explain how and why we
+are implementing multiple port bindings to better support the migration of Nova
+instances. This work is being done for the ML2 plug-in, which is the reference
+Neutron core plug-in. The upshot is that all the ML2 based mechanism drivers
+that are not part of the Neutron code repository will also be enabled with
+multiple port bindings.</p>
+<section id="ml2-port-binding"><h2>ML2 port binding</h2>
+<p>A port is an access point to a Neutron virtual network. Virtual machines, bare
+metal servers and higher level services use ports to send and receive data over
+a virtual network. Binding is the process whereby the ML2 core plug-in decides
+how a port is going to be connected physically to the network to which it
+belongs.</p>
+<p>One of the key design goals for ML2 was to support heterogeneous networking
+technology across compute nodes. A simple example can be a deployment where
+some of the compute nodes use OVS while others use Linux Bridge. To support
+such heterogeneity, ML2 offers the concept of mechanism drivers. In our example
+deployment, we would configure two mechanism drivers: the OVS driver and the
+Linux Bridge driver. A mechanism driver is responsible of configuring the
+physical infrastructure (OVS or Linux Bridge in our example) to bind ports to
+that infrastructure so they can access their virtual network. The binding
+process has a set of well defined inputs:</p>
+<ul class="simple">
+<li>
+<p>Port attributes.</p>
+<ul>
+<li><p><code class="docutils literal">binding:host_id</code>. This is a string specifying the name of the host where
+the port should be bound.</p></li>
+<li><p><code class="docutils literal">binding:vnic_type</code>.  A Neutron port can be requested to be bound as a
+virtual NIC (OVS, Linux Bridge) , direct pci-passthrough, direct macvtap
+or other types. A mechanism driver only binds a port if it supports its
+<code class="docutils literal">vnic_type</code>.</p></li>
+<li><p><code class="docutils literal">binding:profile</code>. This is a dictionary of key / value pairs that
+provides information used to influence the binding process. ML2 will
+accept, store, and return arbitrary key / value pairs within the
+dictionary and their semantics are mechanism driver dependent.</p></li>
+</ul>
+</li>
+<li><p>Network infrastructure configuration. ML2 carries out the process of binding
+a port outside any DB transaction. This is to allow the mechanism drivers to
+configure the infrastructure by performing blocking calls.</p></li>
+</ul>
+<p>ML2 will attempt a binding when, during the processing of a ReST API port
+create or update call, it finds that <code class="docutils literal">binding:host_id</code> is defined (not
+<code class="docutils literal">None</code>) and <code class="docutils literal">binding:vif_type</code> has a value of <code class="docutils literal">VIF_TYPE_UNBOUND</code> or
+<code class="docutils literal">VIF_TYPE_BINDING_FAILED</code>. Under these conditions, ML2 calls the
+<code class="docutils literal">bind_port</code> method of each mechanism driver in the order in which they are
+configured in the mechanism_drivers option in the <code class="docutils literal">ml2</code> section of
+<code class="docutils literal">/etc/neutron/plugins/ml2/ml2_conf.ini</code>. This process continues until one of
+the drivers binds the port successfully to one of the network segments or all
+the drivers have been called and have failed, in which case
+<code class="docutils literal">binding:vif_type</code> is set to <code class="docutils literal">VIF_TYPE_BINDING_FAILED</code>. Failure to bind
+doesn't mean the ReST API call fails. A port create or update can still succeed
+even though it was not possible to bind it.</p>
+<p>There is much more to be said about port binding that goes beyond the scope of
+this post. To learn more about the subject, you can watch the master on the
+subject, Robert Kukura, giving a presentation during the 2016 OpenStack Summit
+in Austin <a class="footnote-reference brackets" href="#id4" id="id1">1</a>.</p>
+</section><section id="better-support-for-instance-live-migration-with-multiple-port-bindings"><h2>Better support for instance live migration with multiple port bindings</h2>
+<p>Instance live migration consists of three stages:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal">pre_live_migration</code>. Executed before migration starts. The target host
+is determined in this stage, but the instance still resides on the source.</p></li>
+<li><p><code class="docutils literal">live_migration_operation</code>. This is the stage where the instance is moved
+to the target host.</p></li>
+<li><p><code class="docutils literal">post_live_migration</code>. The migration has concluded and the source instance
+doesn't exist anymore. Up until now, this is the stage where the instance
+ports were bound.</p></li>
+</ol>
+<p>The problem with this flow is that the port binding happens too late:</p>
+<ul class="simple">
+<li><p>If the binding fails, all the migration steps taken up to this point are
+wasted and the instance gets stuck in an error state. If the migration is
+going to fail due to port binding, we want it to happen as early as possible
+in the process, preferably before the instance is migrated.</p></li>
+<li><p>Network downtime is lengthened by binding the ports in the
+<code class="docutils literal">post_live_migration</code> stage, since the source instance is removed before
+the binding starts.</p></li>
+<li><p>The destination instance definition is built using the results of the source
+instance bindings (<code class="docutils literal">vif_type</code> and <code class="docutils literal">vif_details</code>). This prevents the
+possibility of migrating the instance between hosts with different networking
+technology, from OVS to Linux bridge for example (or to a new and promising
+technology).</p></li>
+</ul>
+<p>To address these issues, the destination instance port binding creation needs
+to be moved to the <code class="docutils literal">pre_live_migration</code> stage. But since the source instance
+is still alive at this stage and using its ports bindings, we need to be able
+to associate more than one binding with each port. The outline of the solution
+is the following:</p>
+<ul class="simple">
+<li><p>A port can have more than one binding. Each binding corresponds to a specific
+host.</p></li>
+<li><p>Only one binding will be in <code class="docutils literal">PORT_BINDING_STATUS_ACTIVE</code>. The others will
+be in <code class="docutils literal">PORT_BINDING_STATUS_INACTIVE</code>.</p></li>
+<li><p>The Neutron ReST API is extended to support CRUD operations for multiple port
+bindings. Also an <code class="docutils literal">activate binding</code> operation is added.</p></li>
+<li>
+<p>When live migrating an instance, Nova will use the new ReST API extension to:</p>
+<ul>
+<li><p>Create during pre_live_migration new bindings in
+<code class="docutils literal">PORT_BINDING_STATUS_INACTIVE</code>.</p></li>
+<li><p>Use information gathered from the inactive binding to modify the instance
+definition during the <code class="docutils literal">live_migration_operation</code>.</p></li>
+<li><p>Use the <code class="docutils literal">activate</code> operation to set the source instance bindings to
+<code class="docutils literal">PORT_BINDING_STATUS_INACTIVE</code> and the destination instance bindings to
+<code class="docutils literal">PORT_BINDING_STATUS_ACTIVE</code> once the latter instance becomes active
+during the <code class="docutils literal">live_migration_operation</code>.</p></li>
+<li><p>Remove the inactive bindings on the source compute host during the
+<code class="docutils literal">post_live_migration</code>.</p></li>
+</ul>
+</li>
+</ul>
+<p>The specific calls in the new ReST API extension are the following (for details
+on the calls requests and responses please see <a class="footnote-reference brackets" href="#id5" id="id2">2</a>):</p>
+<ul class="simple">
+<li><p><code class="docutils literal">POST <span class="pre">/v2.0/ports/{port_id}/bindings</span></code>. The request body has to specify the
+<code class="docutils literal">host</code> to which the binding will be associated and can specify optionally a
+<code class="docutils literal">vnic_type</code> and a <code class="docutils literal">profile</code>. The call returns <code class="docutils literal">vif_type</code> and
+<code class="docutils literal">vif_details</code> and results in a 500 code if the binding fails. In the
+current implementation, only instance ports (<code class="docutils literal">device_owner</code> ==
+<code class="docutils literal">const.DEVICE_OWNER_COMPUTE_PREFIX</code>) can have multiple port bindings and a
+maximum of 2 bindings are allowed per port.</p></li>
+<li><p><code class="docutils literal">PUT <span class="pre">/v2.0/ports/{port_id}/bindings/{host_id}</span></code>. Allows the caller to update
+the <code class="docutils literal">vnic_type</code> and <code class="docutils literal">profile</code>. It returns a new <code class="docutils literal">vif_type</code> and
+<code class="docutils literal">vif_details</code> and results in 500 if the binding fails.</p></li>
+<li><p><code class="docutils literal">PUT <span class="pre">/v2.0/ports/{port_id}/bindings/{host_id}/activate</span></code>. When applied to an
+inactivate binding, it will activate it and inactivate the previously active
+one. Attempting to activate an existing active binding will return a 400. It
+will return a 500 if the binding fails.</p></li>
+<li><p><code class="docutils literal">GET <span class="pre">/v2.0/ports/{port_id}/bindings</span></code>. Returns the bindings associated to a
+port.</p></li>
+<li><p><code class="docutils literal">GET <span class="pre">/v2.0/ports/{port_id}/bindings/{host_id}</span></code>. Returns the details of a
+specific binding.</p></li>
+</ul></section><section id="conclusion"><h2>Conclusion</h2>
+<p>I have given an overview of the port binding process and how it is being
+improved to better support instance live migration. This is the latest chapter
+in a long history of cooperation between the Neutron and Nova teams that will
+continue in the future in our joint quest to better support OpenStack users.
+Please see the specification in <a class="footnote-reference brackets" href="#id6" id="id3">3</a> to learn how the Nova team is leveraging
+multiple port bindings.</p>
+<section id="references"><h3>References</h3>
+<dl class="footnote brackets">
+<dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd>
+<p>Understanding ML2 Port Binding:
+<a class="reference external" href="https://www.youtube.com/watch?v=e38XM-QaA5Q&amp;t=1801s">https://www.youtube.com/watch?v=e38XM-QaA5Q&amp;t=1801s</a></p>
+</dd>
+<dt class="label" id="id5"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
+<dd>
+<p>Provide Port Binding Information for Nova Live Migration specification:
+<a class="reference external" href="https://specs.openstack.org/openstack/neutron-specs/specs/backlog/pike/portbinding_information_for_nova.html">https://specs.openstack.org/openstack/neutron-specs/specs/backlog/pike/portbinding_information_for_nova.html</a></p>
+</dd>
+<dt class="label" id="id6"><span class="brackets"><a class="fn-backref" href="#id3">3</a></span></dt>
+<dd>
+<p>Use Neutron’s new port binding API specification:
+<a class="reference external" href="https://specs.openstack.org/openstack/nova-specs/specs/queens/approved/neutron-new-port-binding-api.html">https://specs.openstack.org/openstack/nova-specs/specs/queens/approved/neutron-new-port-binding-api.html</a></p>
+</dd>
+</dl></section></section>
+</div>
+    </div>
+    <aside class="postpromonav"><nav><ul itemprop="keywords" class="tags">
+<li><a class="tag p-category" href="../../categories/neutron/" rel="tag">Neutron</a></li>
+            <li><a class="tag p-category" href="../../categories/openstack/" rel="tag">OpenStack</a></li>
+        </ul>
+<ul class="pager hidden-print">
+<li class="next">
+                <a href="../on-being-pythonic/" rel="next" title="On being pythonic">Next post</a>
+            </li>
+        </ul></nav></aside><section class="comments hidden-print"><h2>Comments</h2>
+        
+        
+        <div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="miguellavalle",
+            disqus_url="https://www.miguellavalle.com/blog/neutron-multiple-port-bindings/",
+        disqus_title="Implementing multiple bindings for OpenStack Networking ports",
+        disqus_identifier="cache/posts/neutron-multiple-port-bindings.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+        </section></article><script>var disqus_shortname="miguellavalle";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script><!--End of body content--><footer id="footer">
+            Contents © 2022         <a href="mailto:miguel@mlavalle.com">Miguel Lavalle</a> - Powered by         <a href="https://getnikola.com" rel="nofollow">Nikola</a>         
+            
+            
+        </footer>
+</div>
+</div>
+
+
+        <script src="../../assets/js/all-nocdn.js"></script><script>
+    baguetteBox.run('div#content', {
+        ignoreClass: 'islink',
+        captions: function(element){var i=element.getElementsByTagName('img')[0];return i===undefined?'':i.alt;}});
+    </script>
+</body>
+</html>

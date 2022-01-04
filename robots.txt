@@ -1,0 +1,4 @@
+Sitemap: https://www.miguellavalle.com/sitemapindex.xml
+
+User-Agent: *
+Host: www.miguellavalle.com

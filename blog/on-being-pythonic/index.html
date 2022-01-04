@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#
+" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>On being pythonic | code bits and other stuff by Miguel Lavalle</title>
+<link href="../../assets/css/all-nocdn.css" rel="stylesheet" type="text/css">
+<link href="../../assets/css/ipython.min.css" rel="stylesheet" type="text/css">
+<link href="../../assets/css/nikola_ipython.css" rel="stylesheet" type="text/css">
+<meta name="theme-color" content="#5670d4">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="../../rss.xml">
+<link rel="canonical" href="https://www.miguellavalle.com/blog/on-being-pythonic/">
+<link rel="icon" href="../../favicon-16x16.png" sizes="16x16">
+<link rel="icon" href="../../favicon-32x32.png" sizes="32x32">
+<!--[if lt IE 9]><script src="../../assets/js/html5.js"></script><![endif]--><meta name="author" content="Miguel Lavalle">
+<link rel="prev" href="../neutron-multiple-port-bindings/" title="Implementing multiple bindings for OpenStack Networking ports" type="text/html">
+<meta property="og:site_name" content="code bits and other stuff by Miguel Lavalle">
+<meta property="og:title" content="On being pythonic">
+<meta property="og:url" content="https://www.miguellavalle.com/blog/on-being-pythonic/">
+<meta property="og:description" content='I recently was given a Python coding challenge during a job interview. I was criticized for not writing "pythonic" enough code. The good news is that I did great with the other interviewers in the pan'>
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2021-11-25T17:17:30-06:00">
+</head>
+<body>
+<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+
+<!-- Menubar -->
+
+<nav class="navbar navbar-expand-md static-top mb-4
+navbar-light
+bg-info
+"><div class="container">
+<!-- This keeps the margins nice -->
+        <a class="navbar-brand" href="../../">
+
+            <span id="blog-title">code bits and other stuff by Miguel Lavalle</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="bs-navbar">
+            <ul class="navbar-nav mr-auto">
+<li class="nav-item">
+<a href="../../index.html" class="nav-link">Home</a>
+                </li>
+<li class="nav-item">
+<a href="../../archive.html" class="nav-link">Blog</a>
+                </li>
+<li class="nav-item">
+<a href="../../categories/" class="nav-link">Tags</a>
+                </li>
+<li class="nav-item">
+<a href="../../rss.xml" class="nav-link">RSS feed</a>
+
+                
+            </li>
+</ul>
+<ul class="navbar-nav navbar-right"></ul>
+</div>
+<!-- /.navbar-collapse -->
+    </div>
+<!-- /.container -->
+</nav><!-- End of Menubar --><div class="container" id="content" role="main">
+    <div class="body-content">
+        <!--Body content-->
+        
+        
+        
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name"><a href="." class="u-url">On being pythonic</a></h1>
+
+        <div class="metadata">
+            <p class="byline author vcard p-author h-card"><span class="byline-name fn p-name" itemprop="author">
+                    Miguel Lavalle
+            </span></p>
+            <p class="dateline">
+            <a href="." rel="bookmark">
+            <time class="published dt-published" datetime="2021-11-25T17:17:30-06:00" itemprop="datePublished" title="2021-11-25">2021-11-25</time></a>
+            </p>
+                <p class="commentline">
+        
+    <a href="#disqus_thread" data-disqus-identifier="cache/posts/on-being-pythonic.html">Comments</a>
+
+
+            
+
+        </p>
+</div>
+        
+
+    </header><div class="e-content entry-content" itemprop="articleBody text">
+    <div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>I recently was given a Python coding challenge during a job interview. I was criticized for not writing "pythonic" enough code. The good news is that I did great with the other interviewers in the panel, so I still got the job \o/. Afterwards, though, I decided to use the criticism as a learning opportunity, revisit the challenge and write this blog post with the resulting code, while making my best effort to be "pythonic". To that end, here's a basic definition: pythonic code uses the powerful idioms of Python that distinguishes it from other languages to produce elegant and concise programs. To guide me on the road to being "pythonic", I am using the following references:</p>
+<ul>
+<li>
+<a href="https://www.youtube.com/watch?v=OSGv2VnC0go">Transforming Code into Beautiful, Idiomatic Python</a> (<a href="https://speakerdeck.com/pyconslides/transforming-code-into-beautiful-idiomatic-python-by-raymond-hettinger-1">slides</a>) by <a href="https://github.com/rhettinger">Raymond Hettinger</a>, who is a Python core developer.</li>
+<li>Since in this exercise we are going to use generators and coroutines, my other reference is <a href="https://lerner.co.il/2020/05/08/making-sense-of-generators-coroutines-and-yield-from-in-python/">Making sense of generators, coroutines, and “yield from” in Python</a> by <a href="https://lerner.co.il/">Reuven Lerner</a>, who teaches Python all over the world.</li>
+</ul>
+<p>In the code that follows I will cover the following topics</p>
+<ul>
+<li>One of the aspects that strongly distinguishes Python from other programming languages is its approach to iterations. As Raymond Hettinger argues in his presentation, Python's <code>for</code> statement should have been called <code>for each</code> to better reflect its semantics. I will talk about iterables, iterators, the iterator protocol, generators and co-routines.</li>
+<li>Python's regular expresions module.</li>
+<li>Improving clarity with named tuples.</li>
+<li>Factoring out administrative logic with decorators.</li>
+</ul>
+<p>The coding problem was stated as follows:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Model a computing device that can load third party programs.</span>
+
+<span class="c1"># PROGRAMS consist of ACTIONS that share an execution ENVIRONMENT,</span>
+<span class="c1"># particularly computer STATE. ACTIONS belong to a limited set supported</span>
+<span class="c1"># by this device. ACTIONS can communicate with each other through</span>
+<span class="c1"># REGISTERS.</span>
+
+<span class="c1"># PROGRAM execution results in computer STATE change. The STATE change</span>
+<span class="c1"># can then be inspected.</span>
+
+<span class="c1"># Device should allow to LOAD multiple PROGRAMS and execute them</span>
+<span class="c1"># SEQUENTIALLY.</span>
+
+<span class="c1"># Typical API of the computing device would include:</span>
+<span class="c1"># - load(_program)</span>
+<span class="c1"># - execute</span>
+<span class="c1"># - (get_)state</span>
+
+<span class="c1"># Implement the device, define two programs (see below), load them</span>
+<span class="c1"># and execute, then show results.</span>
+
+<span class="c1"># program1: receive int through INPUT; add +10 to the INPUT; store result.</span>
+<span class="c1"># program2: load result of previous program execution; depending on if</span>
+<span class="c1">#           it's &gt; 50, set a register in machine state to 100; otherwise to 0.</span>
+
+<span class="c1"># usage example</span>
+<span class="c1"># c = Computer(...)</span>
+<span class="c1"># p1 = Program(...)</span>
+<span class="c1"># p2 = Program(...)</span>
+<span class="c1"># c.state()  # -&gt; {...}</span>
+<span class="c1"># c.load(p1, input=...)</span>
+<span class="c1"># c.load(p2, input=...)</span>
+<span class="c1"># c.execute()</span>
+<span class="c1"># c.state()  # -&gt; {...0 or 100...}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>To make parsing programs easy, the computing device (henceforth the computer) will have one operand instructions and an accumulator register. The <code>add</code> instruction, for example, adds its operand to the accumulator register. This means that we are also going to need <code>lda</code>  and <code>sto</code> instructions, that load a value to the accumulator and store the value of the accumulator in another register, respectively.  Those registers are part of the computer's state and are described further below. To be able to write <code>program1</code> and <code>program2</code> in the coding challenge, the following is the minimum action set necessary:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">ACTION_SET</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s1">'lda'</span><span class="p">,</span> <span class="s1">'sto'</span><span class="p">,</span> <span class="s1">'bgt'</span><span class="p">,</span> <span class="s1">'cmp'</span><span class="p">,</span> <span class="s1">'add'</span><span class="p">])</span>
+<span class="n">ACTIONS_NO_LITERAL</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s1">'sto'</span><span class="p">,</span> <span class="s1">'bgt'</span><span class="p">])</span>
+<span class="n">BRANCHES</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s1">'bgt'</span><span class="p">])</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Some instructions, like <code>lda</code> or <code>add</code> can take two types of operands, registers and literals:</p>
+<ul>
+<li>
+<code>lda r0</code> loads the content of register <code>r0</code> to the acumulator.</li>
+<li>
+<code>lda #10</code> loads the value <code>10</code> to the acumulator.</li>
+</ul>
+<p>In the case of the <code>sto</code> instruction, though, it doesn't make sense to have literal operands. This instruction always stores the value in the acumulator in one of the registers. The set <code>ACTIONS_NO_LITERAL</code> will help in processing this type of instructions.</p>
+<p>Similarly, branches only accept destination operands, which is an integer <code>i</code> from <code>0</code> to <code>n - 1</code>, where <code>n</code> is the total number of instructions in the program. Branches, like <code>bgt</code>, direct the computer to continue fetching instructions from the location specified by the destination operand.  In other words, the computer is expected to fetch next the <code>ith</code> instruction from the beginning of the program. The set <code>BRANCHES</code> will help in processing this type of instructions.</p>
+<p>To parse a programs, we are going to use Python's <code>re</code> (regulat expressions) module:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [3]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">re</span>
+
+<span class="n">RE_LINE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s1">'^(?P&lt;action&gt;[a-z]</span><span class="si">{3}</span><span class="s1">)\s+(?P&lt;arg&gt;r[io0-9]$|\#-?[0-9]+$|[0-9]+$)'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This regular expression parses one instruction at a time. It can be divided in three parts:</p>
+<ol>
+<li>The named capture group <code>^(?P&lt;action&gt;[a-z]{3})</code> recognizes sequences of 3 alphabetic characters that correspond to members of <code>ACTION_SET</code>. Note that it is anchored to the beginning of the string with <code>^</code>.</li>
+<li>One or more whitespaces <code>\s+</code> that separate the <code>action</code> from the <code>arg</code>.</li>
+<li>The named capture group <code>(?P&lt;arg&gt;r[io0-9]$|\#-?[0-9]+$|[0-9]+$)</code>. This group can be one of three alternatives, separated by <code>|</code> in the regular expression (note that each alternative is anchored to the end of the string with <code>$</code>):</li>
+</ol>
+<ul>
+<li>
+<code>r[io0-9]$</code>, one of the computer's registers <code>ri</code>, <code>ro</code>, <code>r0</code>,... <code>r9</code> or...</li>
+<li>
+<code>#-?[0-9]+$</code>, a literal beginning with <code>#</code> as explained above or...</li>
+<li>
+<code>[0-9]+$</code>, a branch destination as explained above.</li>
+</ul>
+<p>These are a few examples of the instructions that can be parsed:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [14]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Instruction with register operand</span>
+<span class="n">match</span> <span class="o">=</span> <span class="n">RE_LINE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">'lda r0'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">'action'</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">'arg'</span><span class="p">),</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="p">)</span>
+
+<span class="c1"># Instruction with literal operand</span>
+<span class="n">match</span> <span class="o">=</span> <span class="n">RE_LINE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">'add      #16'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">'action'</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">'arg'</span><span class="p">),</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="p">)</span>
+
+<span class="c1"># Instruction with branch destination operand</span>
+<span class="n">match</span> <span class="o">=</span> <span class="n">RE_LINE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">'bgt 23'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">'action'</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">'arg'</span><span class="p">))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>lda
+r0 
+
+add
+#16 
+
+bgt
+23
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>If the provided string doesn't conform with the regular expression, no match object will be returned by the <code>search</code> method:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [21]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Invalid action</span>
+<span class="n">match</span> <span class="o">=</span> <span class="n">RE_LINE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">'ldab r0'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">match</span><span class="p">,</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="p">)</span>
+
+<span class="c1"># Invalid operand</span>
+<span class="n">match</span> <span class="o">=</span> <span class="n">RE_LINE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">'lda ##10'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">match</span><span class="p">,</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="p">)</span>
+
+<span class="c1"># No operand</span>
+<span class="n">match</span> <span class="o">=</span> <span class="n">RE_LINE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">'lda'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>None 
+
+None 
+
+None
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>For a deeper look into Python's regular expressions, here's <a href="https://realpython.com/regex-python/#">part 1</a> and <a href="https://realpython.com/regex-python-part-2/">part 2</a> of an excellent tutorial.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Python lists have two characteristics that make them very suitable to represent the programs defined in this coding challenge:</p>
+<ul>
+<li>They are an ordered collection of objects. A program is an ordered collection of instructions, with each instruction being a string that can be recognized using the regular expresion <code>RE_LINE</code> defined above.</li>
+<li>Their individual elements can be directly accesed using and integer index. This index will serve as the program counter, i.e. the pointer to the next instruction within a program to be executed.</li>
+</ul>
+<p>We are going to tweak the behavior of lists a little bit, to control better the execution of programs. So instead of using lists directly, we are going  to use <a href="https://docs.python.org/3/library/collections.html#userlist-objects">collections.UserList</a>, a useful base class for user defined list-like classes which can inherit from them and override existing methods or add new ones. To be more precise, there will be a <code>Program</code> class that will inherit from <code>collections.UserList</code> and override the <code>__iter__</code> method. As can be seen below, the original <code>__iter__</code> method initializes an index <code>i</code> with <code>0</code> and proceeds to iterate sequentially over the list, returning the next element in each iteration:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [2]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">getsource</span><span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">UserList</span><span class="o">.</span><span class="fm">__iter__</span><span class="p">))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>    def __iter__(self):
+        i = 0
+        try:
+            while True:
+                v = self[i]
+                yield v
+                i += 1
+        except IndexError:
+            return
+
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The <code>__iter__</code> method in our <code>Program</code> class will be a co-routine that will enable the implementation of branch instructions by changing the value of the index variable to any value between 0 and the length - 1 of the program. To see how, let's take a little detour to review in more detail some Python concepts and constructs.</p>
+<p>The <code>__iter__</code> method defined by <code>collections.UserList</code> is a generator function. As explained in <a href="https://lerner.co.il/2020/05/08/making-sense-of-generators-coroutines-and-yield-from-in-python/">Making sense of generators, coroutines, and “yield from” in Python</a>:</p>
+<ul>
+<li>A generator function, when executed, returns a generator object.</li>
+<li>A generator object implements the iterator protocol, meaning that it knows what to do in a <code>for</code> loop.</li>
+<li>Each time a generator reaches a <code>yield</code> statement, it returns the yielded value to the <code>for</code> loop that is invoking it, and goes to sleep.</li>
+<li>With each successive iteration, the generator starts running from where it paused (i.e., just after the most recent <code>yield</code> statement)</li>
+<li>When the generator reaches the end of the function, or encounters a <code>return</code> statement, it raises a <code>StopIteration</code> exception, which is how Python iterators indicate to <code>for</code> loops that they’ve reached the end of the line.</li>
+</ul>
+<p>Let's define a <code>collections.UserList</code> and itereate over it with a <code>for</code> loop:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [22]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">a_list</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">UserList</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+
+<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">a_list</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0
+1
+2
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We can also interact with the <code>__iter__</code> generator function directly, similar to what the <code>for</code> statement does behind the scenes:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [28]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">a_list</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">UserList</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+
+<span class="n">g</span> <span class="o">=</span> <span class="n">a_list</span><span class="o">.</span><span class="fm">__iter__</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">g</span><span class="p">),</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">g</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">g</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">g</span><span class="p">))</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="nb">next</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'</span><span class="se">\n</span><span class="s1"> End of a_list'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>&lt;class 'generator'&gt; 
+
+0
+1
+2
+
+ End of a_list
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We only need two more things to be able to implement the <code>Program</code> class <code>__iter__</code> method:</p>
+<ul>
+<li>First,</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">functools</span>
+    
+<span class="n">ParsedInstruction</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span><span class="s2">"ParsedInstruction"</span><span class="p">,</span>
+                                           <span class="s2">"action, argument"</span><span class="p">)</span>
+<span class="n">LOG</span> <span class="o">=</span> <span class="kc">True</span> 
+
+
+<span class="k">class</span> <span class="nc">Program</span><span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">UserList</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">next_instruction</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">instruction</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">next_instruction</span><span class="p">]</span>
+                <span class="n">next_instruction</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">jump_dest</span> <span class="o">=</span> <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse</span><span class="p">(</span><span class="n">instruction</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">jump_dest</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                    <span class="n">next_instruction</span> <span class="o">=</span> <span class="n">jump_dest</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">_parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instruction</span><span class="p">):</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">RE_LINE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Invalid instruction "</span><span class="si">%s</span><span class="s1">"'</span> <span class="o">%</span> <span class="n">instruction</span><span class="p">)</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">'action'</span><span class="p">)</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">'arg'</span><span class="p">)</span>
+        <span class="n">is_arg_literal</span> <span class="o">=</span> <span class="n">arg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'#'</span>
+        <span class="n">is_branch_destination</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">action</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ACTION_SET</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Action "</span><span class="si">%s</span><span class="s1">" not in actions set'</span> <span class="o">%</span>
+                             <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">'action'</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">is_arg_literal</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">ACTIONS_NO_LITERAL</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Action "</span><span class="si">%s</span><span class="s1">" cannot have a literal argument'</span> <span class="o">%</span>
+                                 <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">'action'</span><span class="p">))</span>
+            <span class="n">arg</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="k">if</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">BRANCHES</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_branch_destination</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s1">'Branch "</span><span class="si">%s</span><span class="s1">" at </span><span class="si">%s</span><span class="s1"> has non branch destination "</span><span class="si">%s</span><span class="s1">"'</span> <span class="o">%</span>
+                    <span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_next</span><span class="p">,</span> <span class="n">arg</span><span class="p">))</span>
+            <span class="n">arg</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">arg</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">or</span> <span class="n">arg</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s1">'Branch "</span><span class="si">%s</span><span class="s1">" to destination "</span><span class="si">%s</span><span class="s1">" jumps outside program '</span>
+                    <span class="s1">'boundaries'</span> <span class="o">%</span> <span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">arg</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">ParsedInstruction</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">arg</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Computer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"ri"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"ro"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"r0"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"r1"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"r2"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"r3"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"r4"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"r5"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"r6"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"r7"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"r8"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"r9"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"zero"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"negative"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"accumulator"</span><span class="p">:</span> <span class="mi">0</span>
+        <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_programs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">program</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_programs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">program</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state</span>
+
+    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">program</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_programs</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">[</span><span class="s1">'ri'</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">parsed_instruction</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">program</span><span class="p">)</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">jump_dest</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parsed_instruction</span><span class="o">.</span><span class="n">action</span><span class="p">)(</span>
+                    <span class="n">parsed_instruction</span><span class="o">.</span><span class="n">argument</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">parsed_instruction</span> <span class="o">=</span> <span class="n">program</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">jump_dest</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+    <span class="k">def</span> <span class="nf">get_argument</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+        <span class="n">functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argument</span><span class="p">):</span>
+            <span class="n">to_pass</span> <span class="o">=</span> <span class="n">argument</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">argument</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">to_pass</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">[</span><span class="n">argument</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">to_pass</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">wrapper</span>
+
+    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+        <span class="n">functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argument</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">LOG</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">argument</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argument</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">wrapper</span>
+
+    <span class="nd">@get_argument</span>
+    <span class="nd">@log</span>
+    <span class="k">def</span> <span class="nf">lda</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argument</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">[</span><span class="s1">'accumulator'</span><span class="p">]</span> <span class="o">=</span> <span class="n">argument</span>
+
+    <span class="nd">@log</span>
+    <span class="k">def</span> <span class="nf">sto</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argument</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">[</span><span class="n">argument</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">[</span><span class="s1">'accumulator'</span><span class="p">]</span>
+
+    <span class="nd">@get_argument</span>
+    <span class="nd">@log</span>
+    <span class="k">def</span> <span class="nf">bgt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argument</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">[</span><span class="s1">'zero'</span><span class="p">]</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">[</span><span class="s1">'negative'</span><span class="p">]):</span>
+            <span class="k">return</span> <span class="n">argument</span>
+
+    <span class="nd">@get_argument</span>
+    <span class="nd">@log</span>
+    <span class="k">def</span> <span class="nf">cmp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argument</span><span class="p">):</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">[</span><span class="s1">'accumulator'</span><span class="p">]</span> <span class="o">-</span> <span class="n">argument</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">[</span><span class="s1">'zero'</span><span class="p">]</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">v</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">[</span><span class="s1">'negative'</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="mi">0</span>
+
+    <span class="nd">@get_argument</span>
+    <span class="nd">@log</span>
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argument</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">[</span><span class="s1">'accumulator'</span><span class="p">]</span> <span class="o">+=</span> <span class="n">argument</span>
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">Computer</span><span class="p">()</span>
+
+    <span class="c1"># p1: receive int through INPUT; add +10 to the INPUT; store result.</span>
+    <span class="n">p1</span> <span class="o">=</span> <span class="n">Program</span><span class="p">([</span><span class="s1">'lda ri'</span><span class="p">,</span>     <span class="c1"># load input</span>
+                  <span class="s1">'add #10'</span><span class="p">,</span>    <span class="c1"># add 10 to it</span>
+                  <span class="s1">'sto r0'</span><span class="p">])</span>    <span class="c1"># store result for next program</span>
+
+    <span class="c1"># p2: load result of previous program execution; depending on if</span>
+    <span class="c1">#     it's &gt; 50, set a register in machine state to 100; otherwise to 0.</span>
+    <span class="n">p2</span> <span class="o">=</span> <span class="n">Program</span><span class="p">([</span><span class="s1">'lda #100'</span><span class="p">,</span>   <span class="c1"># assume p1 output &gt; 50, so...</span>
+                  <span class="s1">'sto r1'</span><span class="p">,</span>     <span class="c1"># ... set r1 to 100</span>
+                  <span class="s1">'lda r0'</span><span class="p">,</span>     <span class="c1"># load p1 output</span>
+                  <span class="s1">'cmp #50'</span><span class="p">,</span>    <span class="c1"># if p1 output...</span>
+                  <span class="s1">'bgt 7'</span><span class="p">,</span>      <span class="c1"># ... is greater than 50, r1 already set up</span>
+                  <span class="s1">'lda #0'</span><span class="p">,</span>     <span class="c1"># p1 output is less than 50 so ...</span>
+                  <span class="s1">'sto r1'</span><span class="p">,</span>     <span class="c1"># ... set r0 to 0</span>
+                  <span class="s1">'cmp #0'</span><span class="p">])</span>    <span class="c1"># noop to have destination for bgt above</span>
+
+    <span class="n">c</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">p2</span><span class="p">)</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">state</span><span class="p">())</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">'__main__'</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+</div>
+    </div>
+    <aside class="postpromonav"><nav><ul class="pager hidden-print">
+<li class="previous">
+                <a href="../neutron-multiple-port-bindings/" rel="prev" title="Implementing multiple bindings for OpenStack Networking ports">Previous post</a>
+            </li>
+        </ul></nav></aside><section class="comments hidden-print"><h2>Comments</h2>
+        
+        
+        <div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="miguellavalle",
+            disqus_url="https://www.miguellavalle.com/blog/on-being-pythonic/",
+        disqus_title="On being pythonic",
+        disqus_identifier="cache/posts/on-being-pythonic.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+        </section><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML" integrity="sha384-3lJUsx1TJHt7BA4udB5KPnDrlkO8T6J6v/op7ui0BbCjvZ9WqV4Xm6DTP6kQ/iBH" crossorigin="anonymous"></script><script type="text/x-mathjax-config">
+        MathJax.Hub.Config({tex2jax: {inlineMath: [['$latex ','$'], ['\\(','\\)']]}});
+        </script></article><script>var disqus_shortname="miguellavalle";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script><!--End of body content--><footer id="footer">
+            Contents © 2022         <a href="mailto:miguel@mlavalle.com">Miguel Lavalle</a> - Powered by         <a href="https://getnikola.com" rel="nofollow">Nikola</a>         
+            
+            
+        </footer>
+</div>
+</div>
+
+
+        <script src="../../assets/js/all-nocdn.js"></script><script>
+    baguetteBox.run('div#content', {
+        ignoreClass: 'islink',
+        captions: function(element){var i=element.getElementsByTagName('img')[0];return i===undefined?'':i.alt;}});
+    </script>
+</body>
+</html>
