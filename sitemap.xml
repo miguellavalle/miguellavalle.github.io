@@ -7,19 +7,15 @@
                         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
  <url>
   <loc>https://www.miguellavalle.com/</loc>
-  <lastmod>2021-11-28T21:58:00Z</lastmod>
- </url>
- <url>
-  <loc>https://www.miguellavalle.com/2021/</loc>
-  <lastmod>2021-11-25T21:55:00Z</lastmod>
+  <lastmod>2022-01-04T00:52:00Z</lastmod>
  </url>
  <url>
   <loc>https://www.miguellavalle.com/archive.html</loc>
-  <lastmod>2022-01-04T00:36:00Z</lastmod>
+  <lastmod>2022-01-10T00:29:00Z</lastmod>
  </url>
  <url>
   <loc>https://www.miguellavalle.com/bio/</loc>
-  <lastmod>2021-11-25T23:04:00Z</lastmod>
+  <lastmod>2022-01-04T00:52:00Z</lastmod>
  </url>
  <url>
   <loc>https://www.miguellavalle.com/blog/</loc>
@@ -34,20 +30,8 @@
   <lastmod>2021-12-07T00:40:00Z</lastmod>
  </url>
  <url>
-  <loc>https://www.miguellavalle.com/blog/post-de-prueba-con-jupyter/</loc>
-  <lastmod>2021-11-25T23:20:00Z</lastmod>
- </url>
- <url>
-  <loc>https://www.miguellavalle.com/blog/rest-post/</loc>
-  <lastmod>2021-11-25T23:04:00Z</lastmod>
- </url>
- <url>
   <loc>https://www.miguellavalle.com/categories/</loc>
-  <lastmod>2021-11-28T22:21:00Z</lastmod>
- </url>
- <url>
-  <loc>https://www.miguellavalle.com/categories/atag/</loc>
-  <lastmod>2021-11-27T01:21:00Z</lastmod>
+  <lastmod>2022-01-04T00:52:00Z</lastmod>
  </url>
  <url>
   <loc>https://www.miguellavalle.com/categories/neutron/</loc>
@@ -64,9 +48,5 @@
  <url>
   <loc>https://www.miguellavalle.com/listings/</loc>
   <lastmod>2021-11-25T21:30:00Z</lastmod>
- </url>
- <url>
-  <loc>https://www.miguellavalle.com/posts/rest-post/</loc>
-  <lastmod>2021-11-25T21:55:00Z</lastmod>
  </url>
 </urlset>
