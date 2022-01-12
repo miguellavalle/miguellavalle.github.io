@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<?xml-stylesheet type="text/xsl" href="assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>code bits and other stuff by Miguel Lavalle</title><link>https://www.miguellavalle.com/</link><description>Code bits sprinkled with other stuff</description><atom:link href="https://www.miguellavalle.com/rss.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2022 &lt;a href="mailto:miguel@mlavalle.com"&gt;Miguel Lavalle&lt;/a&gt; </copyright><lastBuildDate>Mon, 10 Jan 2022 00:29:07 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>On being pythonic</title><link>https://www.miguellavalle.com/blog/on-being-pythonic/</link><dc:creator>Miguel Lavalle</dc:creator><description>&lt;div&gt;&lt;div class="cell border-box-sizing text_cell rendered"&gt;&lt;div class="prompt input_prompt"&gt;
+<?xml-stylesheet type="text/xsl" href="assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>code bits and other stuff by Miguel Lavalle</title><link>https://www.miguellavalle.com/</link><description>Code bits sprinkled with other stuff</description><atom:link href="https://www.miguellavalle.com/rss.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2022 &lt;a href="mailto:miguel@mlavalle.com"&gt;Miguel Lavalle&lt;/a&gt; </copyright><lastBuildDate>Wed, 12 Jan 2022 02:13:12 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>On being pythonic</title><link>https://www.miguellavalle.com/blog/on-being-pythonic/</link><dc:creator>Miguel Lavalle</dc:creator><description>&lt;div&gt;&lt;div class="cell border-box-sizing text_cell rendered"&gt;&lt;div class="prompt input_prompt"&gt;
 &lt;/div&gt;&lt;div class="inner_cell"&gt;
 &lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
 &lt;p&gt;I recently was given a Python coding challenge during a job interview. I was criticized for not writing "pythonic" enough code. The good news is that I did great with the other interviewers in the panel, so I still got the job \o/. Afterwards, though, I decided to use the criticism as a learning opportunity, revisit the challenge and write this blog post with the resulting code, while making my best effort to be "pythonic". To that end, here's a basic definition: pythonic code uses the powerful idioms of Python that distinguishes it from other languages to produce elegant and concise programs. To guide me on the road to being "pythonic", I am using the following references:&lt;/p&gt;
@@ -21,7 +21,7 @@
 &lt;/div&gt;
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
-&lt;div class="prompt input_prompt"&gt;In [ ]:&lt;/div&gt;
+&lt;div class="prompt input_prompt"&gt;In [46]:&lt;/div&gt;
 &lt;div class="inner_cell"&gt;
     &lt;div class="input_area"&gt;
 &lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Model a computing device that can load third party programs.&lt;/span&gt;
@@ -75,7 +75,7 @@
 &lt;/div&gt;
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
-&lt;div class="prompt input_prompt"&gt;In [11]:&lt;/div&gt;
+&lt;div class="prompt input_prompt"&gt;In [47]:&lt;/div&gt;
 &lt;div class="inner_cell"&gt;
     &lt;div class="input_area"&gt;
 &lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;ACTION_SET&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;set&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;&lt;span class="s1"&gt;'lda'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'sto'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'bgt'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'cmp'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'add'&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
@@ -98,14 +98,14 @@
 &lt;/ul&gt;
 &lt;p&gt;In the case of the &lt;code&gt;sto&lt;/code&gt; instruction, though, it doesn't make sense to have literal operands. This instruction always stores the value in the acumulator in one of the registers. The set &lt;code&gt;ACTIONS_NO_LITERAL&lt;/code&gt; will help in processing this type of instructions.&lt;/p&gt;
 &lt;p&gt;Similarly, branches only accept destination operands, which is an integer &lt;code&gt;i&lt;/code&gt; from &lt;code&gt;0&lt;/code&gt; to &lt;code&gt;n - 1&lt;/code&gt;, where &lt;code&gt;n&lt;/code&gt; is the total number of instructions in the program. Branches, like &lt;code&gt;bgt&lt;/code&gt;, direct the computer to continue fetching instructions from the location specified by the destination operand.  In other words, the computer is expected to fetch next the &lt;code&gt;ith&lt;/code&gt; instruction from the beginning of the program. The set &lt;code&gt;BRANCHES&lt;/code&gt; will help in processing this type of instructions.&lt;/p&gt;
-&lt;p&gt;To parse a programs, we are going to use Python's &lt;code&gt;re&lt;/code&gt; (regulat expressions) module:&lt;/p&gt;
+&lt;p&gt;To parse a programs, we are going to use Python's &lt;code&gt;re&lt;/code&gt; (regular expressions) module:&lt;/p&gt;
 
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
-&lt;div class="prompt input_prompt"&gt;In [7]:&lt;/div&gt;
+&lt;div class="prompt input_prompt"&gt;In [48]:&lt;/div&gt;
 &lt;div class="inner_cell"&gt;
     &lt;div class="input_area"&gt;
 &lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;re&lt;/span&gt;
@@ -140,7 +140,7 @@
 &lt;/div&gt;
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
-&lt;div class="prompt input_prompt"&gt;In [14]:&lt;/div&gt;
+&lt;div class="prompt input_prompt"&gt;In [49]:&lt;/div&gt;
 &lt;div class="inner_cell"&gt;
     &lt;div class="input_area"&gt;
 &lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Instruction with register operand&lt;/span&gt;
@@ -199,7 +199,7 @@ bgt
 &lt;/div&gt;
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
-&lt;div class="prompt input_prompt"&gt;In [21]:&lt;/div&gt;
+&lt;div class="prompt input_prompt"&gt;In [50]:&lt;/div&gt;
 &lt;div class="inner_cell"&gt;
     &lt;div class="input_area"&gt;
 &lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Invalid action&lt;/span&gt;
@@ -265,7 +265,7 @@ None
 &lt;/div&gt;
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
-&lt;div class="prompt input_prompt"&gt;In [2]:&lt;/div&gt;
+&lt;div class="prompt input_prompt"&gt;In [51]:&lt;/div&gt;
 &lt;div class="inner_cell"&gt;
     &lt;div class="input_area"&gt;
 &lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;collections&lt;/span&gt;
@@ -309,7 +309,7 @@ None
 &lt;div class="cell border-box-sizing text_cell rendered"&gt;&lt;div class="prompt input_prompt"&gt;
 &lt;/div&gt;&lt;div class="inner_cell"&gt;
 &lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
-&lt;p&gt;The &lt;code&gt;__iter__()&lt;/code&gt; method in our &lt;code&gt;Program&lt;/code&gt; class will be a coroutine that will enable the implementation of branch instructions by changing the value of the index variable to any value between 0 and the length - 1 of the program. To see how, let's take a little detour to review in more detail some Python concepts and constructs.&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;__iter__()&lt;/code&gt; method in our &lt;code&gt;Program&lt;/code&gt; class will be a coroutine that will enable the implementation of branch instructions by changing the value of the index variable to any value between &lt;code&gt;0&lt;/code&gt; and the &lt;code&gt;length - 1&lt;/code&gt; of the program. To see how, let's take a little detour to review in more detail some Python concepts and constructs.&lt;/p&gt;
 &lt;p&gt;The &lt;code&gt;__iter__()&lt;/code&gt; method defined by &lt;code&gt;collections.UserList&lt;/code&gt; is a generator function. As explained in &lt;a href="https://lerner.co.il/2020/05/08/making-sense-of-generators-coroutines-and-yield-from-in-python/"&gt;Making sense of generators, coroutines, and “yield from” in Python&lt;/a&gt;:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;A generator function, when executed, returns a generator object.&lt;/li&gt;
@@ -318,14 +318,14 @@ None
 &lt;li&gt;With each successive iteration, the generator object starts running from where it paused (i.e., just after the most recent &lt;code&gt;yield&lt;/code&gt; statement)&lt;/li&gt;
 &lt;li&gt;When the generator object reaches the end of the function, or encounters a &lt;code&gt;return&lt;/code&gt; statement, it raises a &lt;code&gt;StopIteration&lt;/code&gt; exception, which is how Python iterators indicate to &lt;code&gt;for&lt;/code&gt; loops that they’ve reached the end of the line.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;Let's define a &lt;code&gt;collections.UserList&lt;/code&gt; and itereate over it with a &lt;code&gt;for&lt;/code&gt; loop:&lt;/p&gt;
+&lt;p&gt;Let's define a &lt;code&gt;collections.UserList&lt;/code&gt; and iterate over it with a &lt;code&gt;for&lt;/code&gt; loop:&lt;/p&gt;
 
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
-&lt;div class="prompt input_prompt"&gt;In [13]:&lt;/div&gt;
+&lt;div class="prompt input_prompt"&gt;In [52]:&lt;/div&gt;
 &lt;div class="inner_cell"&gt;
     &lt;div class="input_area"&gt;
 &lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;a_list&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;collections&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;UserList&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
@@ -369,7 +369,7 @@ None
 &lt;/div&gt;
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
-&lt;div class="prompt input_prompt"&gt;In [16]:&lt;/div&gt;
+&lt;div class="prompt input_prompt"&gt;In [53]:&lt;/div&gt;
 &lt;div class="inner_cell"&gt;
     &lt;div class="input_area"&gt;
 &lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;a_list&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;collections&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;UserList&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
@@ -388,13 +388,13 @@ None
 
 &lt;div class="output_area"&gt;
 
-    &lt;div class="prompt output_prompt"&gt;Out[16]:&lt;/div&gt;
+    &lt;div class="prompt output_prompt"&gt;Out[53]:&lt;/div&gt;
 
 
 
 
 &lt;div class="output_text output_subarea output_execute_result"&gt;
-&lt;pre&gt;&amp;lt;generator object Sequence.__iter__ at 0x7f121e9389e0&amp;gt;&lt;/pre&gt;
+&lt;pre&gt;&amp;lt;generator object Sequence.__iter__ at 0x7f121e2693c0&amp;gt;&lt;/pre&gt;
 &lt;/div&gt;
 
 &lt;/div&gt;
@@ -413,7 +413,7 @@ None
 &lt;/div&gt;
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
-&lt;div class="prompt input_prompt"&gt;In [17]:&lt;/div&gt;
+&lt;div class="prompt input_prompt"&gt;In [54]:&lt;/div&gt;
 &lt;div class="inner_cell"&gt;
     &lt;div class="input_area"&gt;
 &lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;next&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;g&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
@@ -462,7 +462,7 @@ End of a_list
 &lt;/div&gt;
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
-&lt;div class="prompt input_prompt"&gt;In [11]:&lt;/div&gt;
+&lt;div class="prompt input_prompt"&gt;In [55]:&lt;/div&gt;
 &lt;div class="inner_cell"&gt;
     &lt;div class="input_area"&gt;
 &lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;grep&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pattern&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
@@ -488,7 +488,7 @@ End of a_list
 &lt;/div&gt;
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
-&lt;div class="prompt input_prompt"&gt;In [12]:&lt;/div&gt;
+&lt;div class="prompt input_prompt"&gt;In [56]:&lt;/div&gt;
 &lt;div class="inner_cell"&gt;
     &lt;div class="input_area"&gt;
 &lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;grep&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"python"&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -505,13 +505,13 @@ End of a_list
 
 &lt;div class="output_area"&gt;
 
-    &lt;div class="prompt output_prompt"&gt;Out[12]:&lt;/div&gt;
+    &lt;div class="prompt output_prompt"&gt;Out[56]:&lt;/div&gt;
 
 
 
 
 &lt;div class="output_text output_subarea output_execute_result"&gt;
-&lt;pre&gt;&amp;lt;generator object grep at 0x7f9d5d069e40&amp;gt;&lt;/pre&gt;
+&lt;pre&gt;&amp;lt;generator object grep at 0x7f121e269580&amp;gt;&lt;/pre&gt;
 &lt;/div&gt;
 
 &lt;/div&gt;
@@ -530,7 +530,7 @@ End of a_list
 &lt;/div&gt;
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
-&lt;div class="prompt input_prompt"&gt;In [13]:&lt;/div&gt;
+&lt;div class="prompt input_prompt"&gt;In [57]:&lt;/div&gt;
 &lt;div class="inner_cell"&gt;
     &lt;div class="input_area"&gt;
 &lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Prime the coroutine so execution advances to the yield expression&lt;/span&gt;
@@ -562,7 +562,7 @@ End of a_list
 &lt;/div&gt;
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
-&lt;div class="prompt input_prompt"&gt;In [14]:&lt;/div&gt;
+&lt;div class="prompt input_prompt"&gt;In [58]:&lt;/div&gt;
 &lt;div class="inner_cell"&gt;
     &lt;div class="input_area"&gt;
 &lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Send lines to the coroutine, so it can search for the pattern "python"&lt;/span&gt;
@@ -600,7 +600,7 @@ End of a_list
 &lt;p&gt;As indicated above, our &lt;code&gt;Program&lt;/code&gt; class inherits from &lt;code&gt;collections.UserList&lt;/code&gt; and refines it as follows:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;It overrides the &lt;code&gt;__iter__()&lt;/code&gt; method with a coroutine. This enables the &lt;code&gt;Computer&lt;/code&gt; class that we will define below to iterate sequentially over the instructions in a &lt;code&gt;Program&lt;/code&gt;, while making it possible to change the next instruction to be returned as a result of a branch instruction execution. An &lt;code&gt;int&lt;/code&gt; value produced by the coroutine's &lt;code&gt;yield&lt;/code&gt; expression is used as a pointer to the next instruction to be retrieved, thus altering the flow of execution.&lt;/li&gt;
-&lt;li&gt;It adds a  &lt;code&gt;_parse()&lt;/code&gt; method, which parses each intruction using the regular expression presented above, performs additional checks and returns a &lt;code&gt;ParsedIntruction&lt;/code&gt; named tuple with two attributes: &lt;code&gt;action&lt;/code&gt; and &lt;code&gt;argument&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;It adds a  &lt;code&gt;_parse()&lt;/code&gt; method, which parses each instruction using the regular expression presented above, performs additional checks and returns a &lt;code&gt;ParsedInstruction&lt;/code&gt; named tuple with two attributes, &lt;code&gt;action&lt;/code&gt; and &lt;code&gt;argument&lt;/code&gt;, for ease of execution by the &lt;code&gt;Computer&lt;/code&gt; class.&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;/div&gt;
@@ -608,11 +608,11 @@ End of a_list
 &lt;/div&gt;
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
-&lt;div class="prompt input_prompt"&gt;In [24]:&lt;/div&gt;
+&lt;div class="prompt input_prompt"&gt;In [59]:&lt;/div&gt;
 &lt;div class="inner_cell"&gt;
     &lt;div class="input_area"&gt;
-&lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;ParsedInstruction&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;collections&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;namedtuple&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"ParsedInstruction"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-                                           &lt;span class="s2"&gt;"action, argument"&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;s&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;collections&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;namedtuple&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"ParsedInstruction"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                           &lt;span class="s2"&gt;"action, argument"&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 
 
 &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Program&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;collections&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;UserList&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
@@ -669,14 +669,14 @@ End of a_list
 &lt;div class="cell border-box-sizing text_cell rendered"&gt;&lt;div class="prompt input_prompt"&gt;
 &lt;/div&gt;&lt;div class="inner_cell"&gt;
 &lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
-&lt;p&gt;Let's create s a &lt;code&gt;Program&lt;/code&gt; and its generator (coroutine) and "prime" the latter to start fetching instructions:&lt;/p&gt;
+&lt;p&gt;Let's create a &lt;code&gt;Program&lt;/code&gt; and its generator (coroutine) and "prime" the latter to start fetching instructions:&lt;/p&gt;
 
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
-&lt;div class="prompt input_prompt"&gt;In [30]:&lt;/div&gt;
+&lt;div class="prompt input_prompt"&gt;In [60]:&lt;/div&gt;
 &lt;div class="inner_cell"&gt;
     &lt;div class="input_area"&gt;
 &lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Define a program with 3 instructions&lt;/span&gt;
@@ -702,7 +702,7 @@ End of a_list
 
 &lt;div class="output_area"&gt;
 
-    &lt;div class="prompt output_prompt"&gt;Out[30]:&lt;/div&gt;
+    &lt;div class="prompt output_prompt"&gt;Out[60]:&lt;/div&gt;
 
 
 
@@ -720,14 +720,14 @@ End of a_list
 &lt;div class="cell border-box-sizing text_cell rendered"&gt;&lt;div class="prompt input_prompt"&gt;
 &lt;/div&gt;&lt;div class="inner_cell"&gt;
 &lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
-&lt;p&gt;We now fetch the other two instructions in the program and, for the &lt;code&gt;bgt&lt;/code&gt; instruction, alter the flow of execution by sending a &lt;code&gt;0&lt;/code&gt; (the first instruction) back to the coroutine:&lt;/p&gt;
+&lt;p&gt;We now fetch the other two instructions in the program and, for the &lt;code&gt;bgt&lt;/code&gt; instruction, alter the flow of execution by sending a &lt;code&gt;0&lt;/code&gt; (the first instruction's location) back to the coroutine:&lt;/p&gt;
 
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
-&lt;div class="prompt input_prompt"&gt;In [31]:&lt;/div&gt;
+&lt;div class="prompt input_prompt"&gt;In [61]:&lt;/div&gt;
 &lt;div class="inner_cell"&gt;
     &lt;div class="input_area"&gt;
 &lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Fetch the cmp instruction&lt;/span&gt;
@@ -771,10 +771,10 @@ ParsedInstruction(action='add', argument=10)
 &lt;div class="cell border-box-sizing text_cell rendered"&gt;&lt;div class="prompt input_prompt"&gt;
 &lt;/div&gt;&lt;div class="inner_cell"&gt;
 &lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
-&lt;h3 id="Using-decorators-to-factor-out-logic"&gt;Using decorators to factor-out logic&lt;a class="anchor-link" href="https://www.miguellavalle.com/blog/on-being-pythonic/#Using-decorators-to-factor-out-logic"&gt;¶&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;By definition, a decorator is a function that takes another function as argument and extends the behavior of the latter function without explictly modifying it. This makes decorators a great mechanism to factor-out logic that is repeated across several functions or methods. Frequently, this is "administrative" logic that is not directly related to the main functionality that we are implementing. In our case, we are implementing two decorators that are used by the &lt;code&gt;Computer&lt;/code&gt; class defined below:&lt;/p&gt;
+&lt;h3 id="Using-decorators-to-factor-out-logic"&gt;Using decorators to factor-out logic&lt;a class="anchor-link" href="https://www.miguellavalle.com/blog/on-being-pythonic/#Using-decorators-to-factor-out-logic"&gt;¶&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;By definition, a decorator is a function that takes another function as argument and extends the behavior of the latter function without explicitly modifying it. This makes decorators a great mechanism to factor-out logic that is repeated across several functions or methods. Frequently, this is "administrative" logic that is not part of the main functionality that we are implementing. In our case, we are implementing two decorators that are used by the &lt;code&gt;Computer&lt;/code&gt; class defined below:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;As mentioned above, many &lt;code&gt;Computer&lt;/code&gt; instructions can take register or literal operands. In the &lt;code&gt;Computer&lt;/code&gt; class we have, for each instruction, a method that implements it. The methods for instructions that can take both types of operands are decorated with &lt;code&gt;get_argument&lt;/code&gt;. This decorator retrieves the actual value to be operated on from the register specified in the instruction, when that is the case. This way, the methods can assume they only receive literal operands.&lt;/li&gt;
-&lt;li&gt;For debbuging purposes, we may choose to log to the console the name of methods that implement instructions and the arguments received when they are executed. These methods are all decorated with &lt;code&gt;log&lt;/code&gt; and a &lt;code&gt;LOG&lt;/code&gt; flag is configured with &lt;code&gt;True&lt;/code&gt; or &lt;code&gt;False&lt;/code&gt; in the &lt;code&gt;Computer&lt;/code&gt; class.&lt;/li&gt;
+&lt;li&gt;For debugging purposes, we may choose to log to the console the name of methods that implement instructions as they are executed, along with the arguments received. To accomplish this, we use the &lt;code&gt;log&lt;/code&gt; decorator together with a &lt;code&gt;LOG&lt;/code&gt; flag that is configured with &lt;code&gt;True&lt;/code&gt; or &lt;code&gt;False&lt;/code&gt; in the &lt;code&gt;Computer&lt;/code&gt; class.&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;/div&gt;
@@ -782,7 +782,7 @@ ParsedInstruction(action='add', argument=10)
 &lt;/div&gt;
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
-&lt;div class="prompt input_prompt"&gt;In [32]:&lt;/div&gt;
+&lt;div class="prompt input_prompt"&gt;In [62]:&lt;/div&gt;
 &lt;div class="inner_cell"&gt;
     &lt;div class="input_area"&gt;
 &lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;functools&lt;/span&gt;
@@ -819,13 +819,15 @@ ParsedInstruction(action='add', argument=10)
 &lt;div class="cell border-box-sizing text_cell rendered"&gt;&lt;div class="prompt input_prompt"&gt;
 &lt;/div&gt;&lt;div class="inner_cell"&gt;
 &lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
-&lt;h3 id="Implementing-the-computer"&gt;Implementing the computer&lt;a class="anchor-link" href="https://www.miguellavalle.com/blog/on-being-pythonic/#Implementing-the-computer"&gt;¶&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="Implementing-the-computer"&gt;Implementing the computer&lt;a class="anchor-link" href="https://www.miguellavalle.com/blog/on-being-pythonic/#Implementing-the-computer"&gt;¶&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;We can now implement the &lt;code&gt;Computer&lt;/code&gt; class. Its core is the &lt;code&gt;execute()&lt;/code&gt; method, which iterates over the instructions of each program by interacting with the &lt;code&gt;Program&lt;/code&gt;'s &lt;code&gt;__iter__()&lt;/code&gt; coroutine in the same manner we interacted with it manually above. For each &lt;code&gt;parsed_instruction&lt;/code&gt; yielded by the coroutine, &lt;code&gt;execute()&lt;/code&gt; passes &lt;code&gt;parsed_instruction.action&lt;/code&gt; as input to Python's &lt;code&gt;getattr()&lt;/code&gt; to select and execute the specific method that implements the instruction, which receives &lt;code&gt;parsed_instruction.argument&lt;/code&gt; as input. Most of the methods that implement instructions return &lt;code&gt;None&lt;/code&gt; to &lt;code&gt;execute()&lt;/code&gt;, which in turn sends it back to the coroutine. The exceptions are the branch instructions, of which we only have &lt;code&gt;bgt&lt;/code&gt;. These branch methods return the integer representing the location of the next instruction to be executed.&lt;/p&gt;
+&lt;p&gt;Following the iterator protocol, &lt;code&gt;execute()&lt;/code&gt; catches the &lt;code&gt;StopIteration&lt;/code&gt; exception, which is the mechanism that the coroutine uses to signal the end of a program.&lt;/p&gt;
+
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
-&lt;div class="prompt input_prompt"&gt;In [33]:&lt;/div&gt;
+&lt;div class="prompt input_prompt"&gt;In [63]:&lt;/div&gt;
 &lt;div class="inner_cell"&gt;
     &lt;div class="input_area"&gt;
 &lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;LOG&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;True&lt;/span&gt; 
@@ -868,6 +870,7 @@ ParsedInstruction(action='add', argument=10)
                 &lt;span class="k"&gt;try&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
                     &lt;span class="n"&gt;parsed_instruction&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;program&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;branch_dest&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
                 &lt;span class="k"&gt;except&lt;/span&gt; &lt;span class="ne"&gt;StopIteration&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                    &lt;span class="c1"&gt;# End of program&lt;/span&gt;
                     &lt;span class="k"&gt;break&lt;/span&gt;
 
     &lt;span class="nd"&gt;@get_argument&lt;/span&gt;
@@ -888,6 +891,8 @@ ParsedInstruction(action='add', argument=10)
     &lt;span class="nd"&gt;@log&lt;/span&gt;
     &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;cmp&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;argument&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
         &lt;span class="n"&gt;v&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;_state&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'accumulator'&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="n"&gt;argument&lt;/span&gt;
+        &lt;span class="c1"&gt;# Set flags in the computer state that are used by the logic&lt;/span&gt;
+        &lt;span class="c1"&gt;# of branch methods&lt;/span&gt;
         &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;_state&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'zero'&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="ow"&gt;not&lt;/span&gt; &lt;span class="n"&gt;v&lt;/span&gt;
         &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;_state&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'negative'&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;v&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;
 
@@ -905,9 +910,17 @@ ParsedInstruction(action='add', argument=10)
 &lt;/div&gt;
 
 &lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;We can now define a function that creates a computer and the two programs defined by the coding challenge above:&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
-&lt;div class="prompt input_prompt"&gt;In [38]:&lt;/div&gt;
+&lt;div class="prompt input_prompt"&gt;In [64]:&lt;/div&gt;
 &lt;div class="inner_cell"&gt;
     &lt;div class="input_area"&gt;
 &lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;create_computer_and_programs&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
@@ -936,16 +949,78 @@ ParsedInstruction(action='add', argument=10)
 &lt;/div&gt;
 
 &lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;If we load &lt;code&gt;p1&lt;/code&gt; with an input value of &lt;code&gt;40&lt;/code&gt;, its output (stored in &lt;code&gt;r0&lt;/code&gt;) will be &lt;code&gt;50&lt;/code&gt;. As a consequence, &lt;code&gt;p2&lt;/code&gt; will set &lt;code&gt;r1&lt;/code&gt; to &lt;code&gt;0&lt;/code&gt;:&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
 &lt;div class="cell border-box-sizing code_cell rendered"&gt;
 &lt;div class="input"&gt;
-&lt;div class="prompt input_prompt"&gt;In [41]:&lt;/div&gt;
+&lt;div class="prompt input_prompt"&gt;In [65]:&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+    &lt;div class="input_area"&gt;
+&lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;p1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;p2&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;create_computer_and_programs&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;load&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;p1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;input&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;40&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;load&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;p2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;execute&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"p2's output = &lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s2"&gt;"&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;state&lt;/span&gt;&lt;span class="p"&gt;()[&lt;/span&gt;&lt;span class="s1"&gt;'r1'&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+    &lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="output_wrapper"&gt;
+&lt;div class="output"&gt;
+
+
+&lt;div class="output_area"&gt;
+
+    &lt;div class="prompt"&gt;&lt;/div&gt;
+
+
+&lt;div class="output_subarea output_stream output_stdout output_text"&gt;
+&lt;pre&gt;lda 40
+add 10
+sto r0
+lda 100
+sto r1
+lda 50
+cmp 50
+bgt 7
+lda 0
+sto r1
+cmp 0
+p2's output = 0
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing text_cell rendered"&gt;&lt;div class="prompt input_prompt"&gt;
+&lt;/div&gt;&lt;div class="inner_cell"&gt;
+&lt;div class="text_cell_render border-box-sizing rendered_html"&gt;
+&lt;p&gt;Whereas if &lt;code&gt;p1&lt;/code&gt; is loaded with an input value of &lt;code&gt;41&lt;/code&gt;, its output will be &lt;code&gt;51&lt;/code&gt; and &lt;code&gt;p2&lt;/code&gt; will set &lt;code&gt;r1&lt;/code&gt; to &lt;code&gt;100&lt;/code&gt;:&lt;/p&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing code_cell rendered"&gt;
+&lt;div class="input"&gt;
+&lt;div class="prompt input_prompt"&gt;In [66]:&lt;/div&gt;
 &lt;div class="inner_cell"&gt;
     &lt;div class="input_area"&gt;
 &lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;p1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;p2&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;create_computer_and_programs&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
 &lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;load&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;p1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;input&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;41&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;load&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;p2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;execute&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
-&lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;state&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
+&lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"p2's output = &lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s2"&gt;"&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;state&lt;/span&gt;&lt;span class="p"&gt;()[&lt;/span&gt;&lt;span class="s1"&gt;'r1'&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
     &lt;/div&gt;
@@ -971,7 +1046,7 @@ lda 51
 cmp 50
 bgt 7
 cmp 0
-{'ri': 0, 'ro': None, 'r0': 51, 'r1': 100, 'r2': None, 'r3': None, 'r4': None, 'r5': None, 'r6': None, 'r7': None, 'r8': None, 'r9': None, 'zero': False, 'negative': False, 'accumulator': 51}
+p2's output = 100
 &lt;/pre&gt;
 &lt;/div&gt;
 &lt;/div&gt;
@@ -979,7 +1054,20 @@ cmp 0
 &lt;/div&gt;
 &lt;/div&gt;
 
-&lt;/div&gt;&lt;/div&gt;</description><guid>https://www.miguellavalle.com/blog/on-being-pythonic/</guid><pubDate>Thu, 25 Nov 2021 23:17:30 GMT</pubDate></item><item><title>Implementing multiple bindings for OpenStack Networking ports</title><link>https://www.miguellavalle.com/blog/neutron-multiple-port-bindings/</link><dc:creator>Miguel Lavalle</dc:creator><description>&lt;div&gt;&lt;p&gt;One would be hard pressed to point out a more fundamental function of OpenStack
+&lt;/div&gt;
+&lt;div class="cell border-box-sizing code_cell rendered"&gt;
+&lt;div class="input"&gt;
+&lt;div class="prompt input_prompt"&gt;In [ ]:&lt;/div&gt;
+&lt;div class="inner_cell"&gt;
+    &lt;div class="input_area"&gt;
+&lt;div class=" highlight hl-ipython3"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt; 
+&lt;/pre&gt;&lt;/div&gt;
+
+    &lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;&lt;/div&gt;</description><guid>https://www.miguellavalle.com/blog/on-being-pythonic/</guid><pubDate>Tue, 11 Jan 2022 23:17:30 GMT</pubDate></item><item><title>Implementing multiple bindings for OpenStack Networking ports</title><link>https://www.miguellavalle.com/blog/neutron-multiple-port-bindings/</link><dc:creator>Miguel Lavalle</dc:creator><description>&lt;div&gt;&lt;p&gt;One would be hard pressed to point out a more fundamental function of OpenStack
 Networking (a.k.a. Neutron) than that of providing virtual ports and the
 process of binding them. It is through bound ports that virtual machines
 (instances) and higher level services like load balancers can access the
